@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Simple 3D Loom – Step by Step</title>
+<style>
+  body { margin: 0; font-family: Arial, sans-serif; background: #f2f2f2; }
+  #ui {
+    position: fixed; top: 10px; left: 10px; background: white;
+    padding: 10px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  }
+  button { margin: 4px; padding: 6px 10px; }
+  #label { margin-top: 8px; font-weight: bold; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div>
+    <button onclick="setStep(1)">Step 1</button>
+    <button onclick="setStep(2)">Step 2</button>
+    <button onclick="setStep(3)">Step 3</button>
+    <button onclick="setStep(4)">Step 4</button>
+    <button onclick="setStep(5)">Step 5</button>
+  </div>
+  <div id="label">Step 1: Frame</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf2f2f2);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0, 6, 12);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+dir.position.set(5,10,7);
+scene.add(dir);
+
+// Groups for steps
+const frame = new THREE.Group();
+const rods = new THREE.Group();
+const warp = new THREE.Group();
+const heddle = new THREE.Group();
+const cloth = new THREE.Group();
+
+scene.add(frame, rods, warp, heddle, cloth);
+
+// Materials
+const cardboard = new THREE.MeshStandardMaterial({ color: 0xb08b62 });
+const wood = new THREE.MeshStandardMaterial({ color: 0xd2b48c });
+const yarnWhite = new THREE.MeshStandardMaterial({ color: 0xffffff });
+const yarnBlue = new THREE.MeshStandardMaterial({ color: 0x3366ff });
+
+// Step 1: Frame
+function makeFrame() {
+  const base = new THREE.Mesh(new THREE.BoxGeometry(10,0.5,6), cardboard);
+  base.position.y = -0.25;
+  frame.add(base);
+
+  const left = new THREE.Mesh(new THREE.BoxGeometry(0.5,4,6), cardboard);
+  left.position.set(-4.75,2,0);
+  frame.add(left);
+
+  const right = left.clone();
+  right.position.x = 4.75;
+  frame.add(right);
+}
+makeFrame();
+
+// Step 2: Rods
+function makeRods() {
+  const geo = new THREE.CylinderGeometry(0.15,0.15,9,16);
+  const top = new THREE.Mesh(geo, wood);
+  top.rotation.z = Math.PI/2;
+  top.position.y = 3.5;
+  rods.add(top);
+
+  const mid = top.clone();
+  mid.position.y = 1.5;
+  rods.add(mid);
+
+  const bottom = top.clone();
+  bottom.position.y = -0.2;
+  rods.add(bottom);
+}
+makeRods();
+
+// Step 3: Warp threads
+function makeWarp() {
+  for (let i=0;i<14;i++){
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,3.5,8), yarnWhite);
+    t.position.x = -3 + i*0.45;
+    t.position.y = 1.6;
+    warp.add(t);
+  }
+}
+makeWarp();
+
+// Step 4: Heddle bar
+function makeHeddle() {
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(6,0.3,0.5), cardboard);
+  bar.position.y = 2.3;
+  heddle.add(bar);
+}
+makeHeddle();
+
+// Step 5: Cloth
+function makeCloth() {
+  const clothMesh = new THREE.Mesh(new THREE.BoxGeometry(5.5,0.6,0.6), yarnBlue);
+  clothMesh.position.y = -0.2;
+  cloth.add(clothMesh);
+}
+makeCloth();
+
+// Step control
+function setStep(n){
+  frame.visible = n>=1;
+  rods.visible = n>=2;
+  warp.visible = n>=3;
+  heddle.visible = n>=4;
+  cloth.visible = n>=5;
+
+  const labels = {
+    1: "Step 1: Build the cardboard frame",
+    2: "Step 2: Insert wooden rods",
+    3: "Step 3: Add warp threads",
+    4: "Step 4: Add heddle bar",
+    5: "Step 5: Weaving cloth"
+  };
+  document.getElementById("label").innerText = labels[n];
+}
+setStep(1);
+
+// Resize
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Animate
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+
+</body>
+</html>
